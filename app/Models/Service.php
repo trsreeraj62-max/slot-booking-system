@@ -40,4 +40,9 @@ class Service extends Model
     {
         return $this->hasMany(TimeSlot::class);
     }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
 }

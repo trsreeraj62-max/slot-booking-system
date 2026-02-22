@@ -40,4 +40,9 @@ class TimeSlot extends Model
     {
         return $this->belongsTo(Service::class);
     }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class, 'slot_id');
+    }
 }
