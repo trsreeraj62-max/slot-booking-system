@@ -52,4 +52,73 @@ class StoreController extends Controller
             'data' => $store
         ]);
     }
+
+    /**
+     * Day 11: Create Store (Admin)
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'location' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'status' => 'required|in:active,inactive',
+            'working_days' => 'required|array',
+            'images' => 'nullable|array',
+        ]);
+
+        $validated['created_by'] = auth()->id();
+
+        $store = Store::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Store created successfully',
+            'data' => $store
+        ], 201);
+    }
+
+    /**
+     * Day 11: Update Store (Admin)
+     */
+    public function update(Request $request, string $store_id): JsonResponse
+    {
+        $store = Store::findOrFail($store_id);
+
+        $validated = $request->validate([
+            'name' => 'string|max:255',
+            'location' => 'string|max:255',
+            'description' => 'nullable|string',
+            'working_days' => 'array',
+            'images' => 'nullable|array',
+        ]);
+
+        $store->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Store updated successfully',
+            'data' => $store
+        ]);
+    }
+
+    /**
+     * Day 11: Activate/Deactivate Store (Admin)
+     */
+    public function updateStatus(Request $request, string $store_id): JsonResponse
+    {
+        $store = Store::findOrFail($store_id);
+
+        $validated = $request->validate([
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        $store->update(['status' => $validated['status']]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Store status updated successfully',
+            'data' => $store
+        ]);
+    }
 }
