@@ -15,13 +15,21 @@ class SlotController extends Controller
      */
     public function index(Request $request, $store_id)
     {
-        $date = $request->query('date');
+        try {
+            $date = $request->query('date');
 
-        $slots = TimeSlot::where('store_id', $store_id)
-            ->where('slot_date', $date)
-            ->get(['id as slot_id', 'start_time', 'end_time', 'status']);
+            $slots = TimeSlot::where('store_id', $store_id)
+                ->where('slot_date', $date)
+                ->get(['id as slot_id', 'start_time', 'end_time', 'status']);
 
-        return response()->json($slots);
+            return response()->json($slots);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while fetching slots',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -29,29 +37,37 @@ class SlotController extends Controller
      */
     public function lock(Request $request, $slot_id)
     {
-        return DB::transaction(function () use ($slot_id, $request) {
+        try {
+            return DB::transaction(function () use ($slot_id, $request) {
 
-            $slot = TimeSlot::where('id', $slot_id)
-                ->lockForUpdate()
-                ->first();
+                $slot = TimeSlot::where('id', $slot_id)
+                    ->lockForUpdate()
+                    ->first();
 
-            if (!$slot || $slot->status !== 'available') {
+                if (!$slot || $slot->status !== 'available') {
+                    return response()->json([
+                        'message' => 'Slot unavailable'
+                    ], 409);
+                }
+
+                $slot->update([
+                    'status' => 'locked',
+                    'slot_date' => $request->date,
+                    'locked_by' => auth()->id(),
+                    'lock_expires_at' => now()->addMinutes(5)
+                ]);
+
                 return response()->json([
-                    'message' => 'Slot unavailable'
-                ], 409);
-            }
-
-            $slot->update([
-                'status' => 'locked',
-                'slot_date' => $request->date,
-                'locked_by' => auth()->id(),
-                'lock_expires_at' => now()->addMinutes(5)
-            ]);
-
+                    'status' => 'locked',
+                    'expires_at' => $slot->lock_expires_at
+                ]);
+            });
+        } catch (\Exception $e) {
             return response()->json([
-                'status' => 'locked',
-                'expires_at' => $slot->lock_expires_at
-            ]);
-        });
+                'success' => false,
+                'message' => 'An error occurred while locking slot',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

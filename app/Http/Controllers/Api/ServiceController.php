@@ -12,19 +12,27 @@ class ServiceController extends Controller
 {
     public function index($store_id)
     {
-        // Validate store exists
-        $store = Store::where('id', $store_id)->first();
+        try {
+            // Validate store exists
+            $store = Store::where('id', $store_id)->first();
 
-        if (!$store) {
+            if (!$store) {
+                return response()->json([
+                    'message' => 'Store not found'
+                ], 404);
+            }
+
+            // Get services belonging to store
+            $services = Service::where('store_id', $store_id)->get();
+
+            return response()->json($services);
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Store not found'
-            ], 404);
+                'success' => false,
+                'message' => 'An error occurred while fetching services',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        // Get services belonging to store
-        $services = Service::where('store_id', $store_id)->get();
-
-        return response()->json($services);
     }
 
     /**
@@ -32,25 +40,33 @@ class ServiceController extends Controller
      */
     public function store(Request $request, $store_id)
     {
-        $store = Store::where('id', $store_id)->firstOrFail();
+        try {
+            $store = Store::where('id', $store_id)->firstOrFail();
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'duration_minutes' => 'required|integer|min:1',
-            'price' => 'required|numeric|min:0',
-            'status' => 'required|in:active,inactive',
-            'images' => 'nullable|array',
-        ]);
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'duration_minutes' => 'required|integer|min:1',
+                'price' => 'required|numeric|min:0',
+                'status' => 'required|in:active,inactive',
+                'images' => 'nullable|array',
+            ]);
 
-        $validated['store_id'] = $store->id;
+            $validated['store_id'] = $store->id;
 
-        $service = Service::create($validated);
+            $service = Service::create($validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Service created successfully',
-            'data' => $service
-        ], 201);
+            return response()->json([
+                'success' => true,
+                'message' => 'Service created successfully',
+                'data' => $service
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while creating service',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

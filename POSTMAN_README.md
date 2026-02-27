@@ -1,71 +1,193 @@
-# Postman API Testing Documentation - Slot Booking System
+# Slot Booking System - API Testing Guide (Postman)
 
-This document provides instructions on how to test the Slot Booking System APIs using Postman.
+This guide provides step-by-step instructions on how to test the Slot Booking System APIs using Postman.
 
 ## Base URL
-`http://localhost/api/v1`
-
-## Authentication
-Most endpoints require a Bearer Token. To get a token, you'll need to implement or use a login/register endpoint (not explicitly requested but required for `auth:sanctum`). For testing purposes, you can create a token in a seeder or use the `BookingFlowTest` logic.
-
-### 1. Store APIs
-- **List All Active Stores**
-    - `GET /stores`
-    - Returns paginated list of active stores.
-- **Get Store Details**
-    - `GET /stores/{store_id}`
-    - Returns details of a specific active store.
-
-### 2. Service APIs
-- **Get Services by Store**
-    - `GET /stores/{store_id}/services`
-    - Returns all available services for the given store.
-
-### 3. Time Slot APIs
-- **Get Available Slots**
-    - `GET /stores/{store_id}/slots?date=YYYY-MM-DD`
-    - Returns slots for a specific date.
-- **Lock a Slot (Requires Auth)**
-    - `POST /slots/{slot_id}/lock`
-    - Body: `{"date": "2026-03-01"}`
-    - Logic: Locks the slot for 5 minutes.
-    - Rate Limit: Max 5 locks per minute per user.
-
-### 4. Booking APIs
-- **Create Booking (Requires Auth)**
-    - `POST /bookings`
-    - Body:
-        ```json
-        {
-          "store_id": "UUID",
-          "service_ids": ["UUID"],
-          "slot_id": "UUID",
-          "date": "2026-03-01"
-        }
-        ```
-    - Note: Slot must be locked by you first.
-- **Get Booking Details (Requires Auth)**
-    - `GET /bookings/{booking_id}`
-- **Cancel Booking (Requires Auth)**
-    - `POST /bookings/{booking_id}/cancel`
-
-### 5. Admin APIs (Requires Auth)
-- **Create Store**
-    - `POST /admin/stores`
-- **Update Store**
-    - `PUT /admin/stores/{store_id}`
-- **Toggle Store Status**
-    - `PATCH /admin/stores/{store_id}/status`
-    - Body: `{"status": "active"}` or `{"status": "inactive"}`
-- **Create Service**
-    - `POST /admin/stores/{store_id}/services`
+The API base URL is:
+```text
+http://127.0.0.1:8000/api/v1
+```
+*(Make sure your Laravel server is running using `php artisan serve`)*
 
 ---
 
-## Testing Workflow (Postman)
-1. **Fetch Stores**: Run `GET /stores` and copy a `store_id`.
-2. **Fetch Services**: Run `GET /stores/{id}/services` and copy a `service_id`.
-3. **Fetch Slots**: Run `GET /stores/{id}/slots?date=2026-03-01` and copy a `slot_id`.
-4. **Lock Slot**: Run `POST /slots/{id}/lock` with a Bearer token.
-5. **Create Booking**: Run `POST /bookings` using the IDs from previous steps.
-6. **Verify**: Check the booking details or try to lock the same slot again (should fail).
+## 🔐 1. Authentication APIs
+
+### 1.1 Register User
+- **Method:** `POST`
+- **URL:** `{{base_url}}/register`
+- **Body (raw JSON):**
+```json
+{
+    "name": "Test User",
+    "email": "testuser@example.com",
+    "password": "password",
+    "password_confirmation": "password",
+    "phone": "1234567890"
+}
+```
+
+### 1.2 Login User
+- **Method:** `POST`
+- **URL:** `{{base_url}}/login`
+- **Body (raw JSON):**
+```json
+{
+    "email": "testuser@example.com",
+    "password": "password"
+}
+```
+**Important:** Copy the `access_token` from the response. You will need it for authenticated endpoints.
+
+### 1.3 Logout
+- **Method:** `POST`
+- **URL:** `{{base_url}}/logout`
+- **Headers:**
+  - `Authorization`: `Bearer YOUR_ACCESS_TOKEN`
+
+---
+
+## 🏪 2. Store & Service APIs (Public)
+
+### 2.1 Get Active Stores
+- **Method:** `GET`
+- **URL:** `{{base_url}}/stores`
+
+### 2.2 Get Single Store Details
+- **Method:** `GET`
+- **URL:** `{{base_url}}/stores/{store_id}`
+
+### 2.3 Get Store Services
+- **Method:** `GET`
+- **URL:** `{{base_url}}/stores/{store_id}/services`
+
+---
+
+## 📅 3. Slot APIs
+
+### 3.1 Get Store Time Slots
+- **Method:** `GET`
+- **URL:** `{{base_url}}/stores/{store_id}/slots?date=YYYY-MM-DD`
+- **Query Params:**
+  - `date`: e.g., `2024-03-01`
+
+### 3.2 Lock a Slot (Requires Auth)
+- **Method:** `POST`
+- **URL:** `{{base_url}}/slots/{slot_id}/lock`
+- **Headers:**
+  - `Authorization`: `Bearer YOUR_ACCESS_TOKEN`
+- **Body (raw JSON):**
+```json
+{
+    "date": "2024-03-01"
+}
+```
+*(Locks the slot for 5 minutes before confirming booking)*
+
+---
+
+## 🛍️ 4. Booking APIs (Requires Auth)
+
+### 4.1 Create Booking
+- **Method:** `POST`
+- **URL:** `{{base_url}}/bookings`
+- **Headers:**
+  - `Authorization`: `Bearer YOUR_ACCESS_TOKEN`
+- **Body (raw JSON):**
+```json
+{
+    "store_id": "YOUR_STORE_UUID",
+    "service_ids": [
+        "YOUR_SERVICE_UUID"
+    ],
+    "slot_id": "YOUR_SLOT_UUID",
+    "date": "2024-03-01"
+}
+```
+
+### 4.2 Get Booking Details
+- **Method:** `GET`
+- **URL:** `{{base_url}}/bookings/{booking_id}`
+- **Headers:**
+  - `Authorization`: `Bearer YOUR_ACCESS_TOKEN`
+
+### 4.3 Cancel Booking
+- **Method:** `POST`
+- **URL:** `{{base_url}}/bookings/{booking_id}/cancel`
+- **Headers:**
+  - `Authorization`: `Bearer YOUR_ACCESS_TOKEN`
+
+---
+
+## ⚙️ 5. Admin APIs (Requires Auth & Admin Role)
+
+*Ensure the user you log in as has the `admin` role.*
+
+### 5.1 Create Store
+- **Method:** `POST`
+- **URL:** `{{base_url}}/admin/stores`
+- **Headers:**
+  - `Authorization`: `Bearer YOUR_ACCESS_TOKEN`
+- **Body (raw JSON):**
+```json
+{
+    "name": "New Test Store",
+    "location": "123 Business Street",
+    "description": "A great new store.",
+    "status": "active",
+    "working_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+}
+```
+
+### 5.2 Update Store
+- **Method:** `PUT`
+- **URL:** `{{base_url}}/admin/stores/{store_id}`
+- **Headers:**
+  - `Authorization`: `Bearer YOUR_ACCESS_TOKEN`
+- **Body (raw JSON):**
+```json
+{
+    "name": "Updated Store Name",
+    "location": "456 New Street"
+}
+```
+
+### 5.3 Update Store Status
+- **Method:** `PATCH`
+- **URL:** `{{base_url}}/admin/stores/{store_id}/status`
+- **Headers:**
+  - `Authorization`: `Bearer YOUR_ACCESS_TOKEN`
+- **Body (raw JSON):**
+```json
+{
+    "status": "inactive"
+}
+```
+
+### 5.4 Add Service to Store
+- **Method:** `POST`
+- **URL:** `{{base_url}}/admin/stores/{store_id}/services`
+- **Headers:**
+  - `Authorization`: `Bearer YOUR_ACCESS_TOKEN`
+- **Body (raw JSON):**
+```json
+{
+    "name": "Haircut",
+    "description": "Standard Haircut",
+    "duration_minutes": 30,
+    "price": 25.00,
+    "status": "active"
+}
+```
+
+---
+
+## 💡 How to Use Postman Environments (Pro Tip)
+1. In Postman, go to **Environments** on the left panel.
+2. Click **Create Environment** and name it `Slot Booking Local`.
+3. Add a new variable:
+   - **Variable:** `base_url`
+   - **Initial Value:** `http://127.0.0.1:8000/api/v1`
+   - **Current Value:** `http://127.0.0.1:8000/api/v1`
+4. Make sure to select this environment from the top-right dropdown in Postman.
+5. You can also add variables like `store_id`, `service_id`, `slot_id`, and `access_token` as you get them from responses, so you don't have to copy-paste them manually.

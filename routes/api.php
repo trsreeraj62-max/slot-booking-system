@@ -7,12 +7,18 @@ use App\Http\Controllers\Api\StoreController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\SlotController;
 use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\AuthController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
 Route::prefix('v1')->group(function () {
+    // Auth Routes
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
     Route::get('/stores', [StoreController::class, 'index']);
     Route::get('/stores/{store_id}', [StoreController::class, 'show']);
     Route::get('/stores/{store_id}/services', [ServiceController::class, 'index']);
@@ -21,10 +27,11 @@ Route::prefix('v1')->group(function () {
     Route::get('/stores/{store_id}/slots', [SlotController::class, 'index']);
     
     // Slot Locking with Rate Limiting 
-    Route::middleware(['auth:sanctum', 'throttle:5,1'])->post('/slots/{slot_id}/lock', [SlotController::class, 'lock']);
+    // Now moved to the auth:sanctum group below
 
     // Booking Creation and Cancellation 
     Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/slots/{slot}/lock', [SlotController::class, 'lock'])->middleware('throttle:5,1');
         Route::post('/bookings', [BookingController::class, 'store']);
         Route::get('/bookings/{booking_id}', [BookingController::class, 'show']);
         Route::post('/bookings/{booking_id}/cancel', [BookingController::class, 'cancel']);

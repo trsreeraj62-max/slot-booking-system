@@ -53,6 +53,16 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Get the password for the user.
+     *
+     * @return string
+     */
+    public function getAuthPassword()
+    {
+        return $this->password_hash;
+    }
+
     public function bookings()
     {
         return $this->hasMany(Booking::class);
