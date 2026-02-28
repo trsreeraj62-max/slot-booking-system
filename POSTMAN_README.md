@@ -82,7 +82,7 @@ http://127.0.0.1:8000/api/v1
     "date": "2024-03-01"
 }
 ```
-*(Locks the slot for 5 minutes before confirming booking)*
+*(Locks the slot for 10 minutes before confirming booking)*
 
 ---
 

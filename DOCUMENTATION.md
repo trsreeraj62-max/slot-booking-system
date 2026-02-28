@@ -50,7 +50,7 @@ When a user attempts to lock a slot:
 4. Updates slot:
    - `status = "locked"`
    - `locked_by = user_id`
-   - `lock_expires_at = NOW() + 5 minutes`
+   - `lock_expires_at = NOW() + 10 minutes`
 5. Commits transaction.
 
 > **Note:** A cron job (`php artisan schedule:run`) continuously runs `expire:slot-locks` every minute. It runs `UPDATE time_slots SET status = 'available' WHERE status = 'locked' AND lock_expires_at < NOW()`.

@@ -18,7 +18,7 @@ class ExpireSlotLocks extends Command
      *
      * @var string
      */
-    protected $description = 'Release expired time slot locks older than 5 minutes';
+    protected $description = 'Release expired time slot locks older than 10 minutes';
 
     /**
      * Execute the console command.

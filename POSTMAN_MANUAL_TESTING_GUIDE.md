@@ -74,7 +74,7 @@ This guide covers everything outlined in your Booking Engine Backend Architectur
       "expires_at": "..."
   }
   ```
-> **ARCHITECTURE VALIDATED:** The slot is immediately locked for your user account for exactly 5 minutes with pessimistic DB row locking (`SELECT FOR UPDATE`).
+> **ARCHITECTURE VALIDATED:** The slot is immediately locked for your user account for exactly 10 minutes with pessimistic DB row locking (`SELECT FOR UPDATE`).
 
 **Test 4.2: Concurrency & Double Booking Attempt**
 - **Action:** Without changing anything, hit **Send** on the Lock request AGAIN immediately.
@@ -142,6 +142,6 @@ This guide covers everything outlined in your Booking Engine Backend Architectur
 **Test 6.3: Testing Lock Expiry (Abandoned Slots)**
 1. Find a *new* available slot and Lock it (Run Test 4.1 again).
 2. Look at the `"expires_at"` timestamp. 
-3. *Wait exactly 5 minutes.* 
+3. *Wait exactly 10 minutes.* 
 4. Attempt to confirm the booking (Run Test 5.1).
 5. **Expected Result:** `422 Unprocessable Entity - Slot lock invalid or expired.` The `expire:slot-locks` background job automatically cleared your abandoned cart in the database!

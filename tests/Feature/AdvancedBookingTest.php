@@ -94,7 +94,7 @@ class AdvancedBookingTest extends TestCase
             'status' => 'locked',
             'slot_date' => Carbon::now()->format('Y-m-d'),
             'locked_by' => $this->user->id,
-            'lock_expires_at' => Carbon::now()->addMinutes(5)
+            'lock_expires_at' => Carbon::now()->addMinutes(10)
         ]);
 
         // Let user 2 try to lock the exact same slot
@@ -118,7 +118,7 @@ class AdvancedBookingTest extends TestCase
             'status' => 'locked',
             'slot_date' => Carbon::now()->format('Y-m-d'),
             'locked_by' => $this->user->id,
-            'lock_expires_at' => Carbon::now()->addMinutes(5)
+            'lock_expires_at' => Carbon::now()->addMinutes(10)
         ]);
 
         $response = $this->postJson('/api/v1/bookings', [

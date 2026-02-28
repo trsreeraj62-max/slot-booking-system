@@ -54,7 +54,7 @@ class SlotController extends Controller
                     'status' => 'locked',
                     'slot_date' => $request->date,
                     'locked_by' => auth()->id(),
-                    'lock_expires_at' => now()->addMinutes(5)
+                    'lock_expires_at' => now()->addMinutes(10)
                 ]);
 
                 return response()->json([
